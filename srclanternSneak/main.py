@@ -107,25 +107,21 @@ class Player(pygame.sprite.Sprite):
             self.rect.y -= dy
 
     def getWindow(self):
-        length = self.pumpkins + 3
+        length = self.pumpkins*2 + 3
         half = length//2
         darkness = pygame.Surface((512, 512), pygame.SRCALPHA)
         darkness.fill((0, 0, 0, 255))
         relativePos = (-(half)*TILE, -(half)*TILE)
 
-        rx, ry = relativePos
-        
-        for i in range(length):
+        hole = pygame.Rect(
+            self.rect.x - half * TILE,
+            self.rect.y - half *TILE,
+            length*TILE,
+            length*TILE
+        )
 
-            for j in range(length):
-                pygame.draw.rect(darkness, (0, 0, 0, 0), ((self.rect.topleft +relativePos), (TILE, TILE)))
-                x, y = relativePos
-                y += TILE
-                relativePos = x, y
-            x, y = relativePos
-            x += TILE
-            y = ry
-            relativePos = x, y
+
+        pygame.draw.rect(darkness, (0, 0, 0, 0), hole)
         return darkness
 
 
@@ -245,9 +241,9 @@ class Pumpkin(pygame.sprite.Sprite):
         if pygame.sprite.spritecollide(player, pumpkins, False):
             for sprite in pumpkins:
                 if sprite.rect.topleft == player.rect.topleft and sprite.collected == False:
-                    player.pummpkins += 1
+                    player.pumpkins += 1
                     sprite.collected = True
-                    coins.remove(sprite)
+                    pumpkins.remove(sprite)
 
 
 
@@ -263,7 +259,7 @@ def FinishGame():
     timeStop = pygame.time.get_ticks()
     global state
     state = "finished"
-    print(player.coins)
+    print(player.pumpkins)
 
 def UpdateHighScore(score):
     global highScore
@@ -427,7 +423,7 @@ while running:
 
         player.update()
 
-        for sprite in coins:
+        for sprite in pumpkins:
             sprite.update()
 
         # drawing stuff
@@ -442,13 +438,17 @@ while running:
             for zombie in zombies:
                 zombie.move()
 
-        zombies.draw(screen)
 
         obstacles.draw(screen)
 
         webs.draw(screen)
 
-        coins.draw(screen)
+        pumpkins.draw(screen)
+
+        screen.blit(player.getWindow())
+
+        zombies.draw(screen)
+
 
         for i in range(17):
             pygame.draw.line(screen, (20, 20, 20), (i*32 - 1, 0), (i*32 - 1, 512), 2)
@@ -461,7 +461,7 @@ while running:
         time = (timeStop - timeBegin)/1000
         UpdateHighScore(time)
         if player.pumpkins > 2:
-            screen.fill((255, 180, 0))
+            screen.fill((255, 130, 0))
         else:
             screen.fill((100, 100, 100))
         highScoreText = titleFont.render(f"Best time: {highScore}s", False, (255, 255, 255))
